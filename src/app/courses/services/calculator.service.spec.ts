@@ -4,10 +4,10 @@ import { TestBed } from "@angular/core/testing";
 
 describe("CalculatorService", () => {
   let calculator: CalculatorService;
-  let loggerSpy: any;
+  let loggerServiceSpy: jasmine.SpyObj<LoggerService>;
 
   beforeEach(() => {
-    loggerSpy = jasmine.createSpyObj("LoggerService", ["log"]);
+    const loggerSpy = jasmine.createSpyObj("LoggerService", ["log"]);
 
     TestBed.configureTestingModule({
       providers: [
@@ -20,6 +20,9 @@ describe("CalculatorService", () => {
     });
 
     calculator = TestBed.inject(CalculatorService);
+    loggerServiceSpy = TestBed.inject(
+      LoggerService
+    ) as jasmine.SpyObj<LoggerService>;
   });
 
   it("should add 2 numbers", () => {
@@ -27,13 +30,13 @@ describe("CalculatorService", () => {
 
     expect(result).toBe(4);
 
-    expect(loggerSpy.log).toHaveBeenCalledTimes(1);
+    expect(loggerServiceSpy.log).toHaveBeenCalledTimes(1);
   });
 
   it("should subtract 2 numbers", () => {
     const result = calculator.subtract(2, 2);
 
     expect(result).toBe(0, "unexpected subtraction result");
-    expect(loggerSpy.log).toHaveBeenCalledTimes(1);
+    expect(loggerServiceSpy.log).toHaveBeenCalledTimes(1);
   });
 });
