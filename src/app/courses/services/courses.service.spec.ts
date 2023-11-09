@@ -6,7 +6,7 @@ import {
 } from "@angular/common/http/testing";
 import { CoursesService } from "./courses.service";
 import { Course } from "../model/course";
-import { HttpErrorResponse } from "@angular/common/http";
+import { HttpErrorResponse, HttpRequest } from "@angular/common/http";
 
 describe("CoursesService", () => {
   let coursesService: CoursesService;
@@ -34,11 +34,13 @@ describe("CoursesService", () => {
       expect(course.titles.description).toBe("Angular Testing Course");
     });
 
-    const req = httpTestingController.expectOne("/api/courses");
+    const testRequest = httpTestingController.expectOne("/api/courses");
 
-    expect(req.request.method).toEqual("GET");
+    const httpRequest = testRequest.request as HttpRequest<null>;
 
-    req.flush({
+    expect(httpRequest.method).toEqual("GET");
+
+    testRequest.flush({
       payload: Object.values(COURSES),
     });
   });
@@ -49,11 +51,13 @@ describe("CoursesService", () => {
       expect(course.id).toBe(12);
     });
 
-    const req = httpTestingController.expectOne("/api/courses/12");
+    const testRequest = httpTestingController.expectOne("/api/courses/12");
 
-    expect(req.request.method).toEqual("GET");
+    const httpRequest = testRequest.request as HttpRequest<null>;
 
-    req.flush(COURSES[12]);
+    expect(httpRequest.method).toEqual("GET");
+
+    testRequest.flush(COURSES[12]);
   });
 
   it("should save the course data", () => {
@@ -65,15 +69,17 @@ describe("CoursesService", () => {
       expect(course.id).toBe(12);
     });
 
-    const req = httpTestingController.expectOne("/api/courses/12");
+    const testRequest = httpTestingController.expectOne("/api/courses/12");
 
-    expect(req.request.method).toEqual("PUT");
+    const httpRequest = testRequest.request as HttpRequest<Partial<Course>>;
 
-    expect(req.request.body.titles.description).toEqual(
+    expect(httpRequest.method).toEqual("PUT");
+
+    expect(httpRequest.body.titles.description).toEqual(
       changes.titles.description
     );
 
-    req.flush({
+    testRequest.flush({
       ...COURSES[12],
       ...changes,
     });
@@ -91,11 +97,13 @@ describe("CoursesService", () => {
       }
     );
 
-    const req = httpTestingController.expectOne("/api/courses/12");
+    const testRequest = httpTestingController.expectOne("/api/courses/12");
 
-    expect(req.request.method).toEqual("PUT");
+    const httpRequest = testRequest.request as HttpRequest<Partial<Course>>;
 
-    req.flush("Save course failed", {
+    expect(httpRequest.method).toEqual("PUT");
+
+    testRequest.flush("Save course failed", {
       status: 500,
       statusText: "Internal Server Error",
     });
@@ -107,23 +115,25 @@ describe("CoursesService", () => {
       expect(lessons.length).toBe(3);
     });
 
-    const req = httpTestingController.expectOne(
-      (req) => req.url == "/api/lessons"
+    const testRequest = httpTestingController.expectOne(
+      (req: HttpRequest<null>) => req.url == "/api/lessons"
     );
 
-    expect(req.request.method).toEqual("GET");
+    const httpRequest = testRequest.request as HttpRequest<null>;
 
-    expect(req.request.params.get("courseId")).toEqual("12");
+    expect(httpRequest.method).toEqual("GET");
 
-    expect(req.request.params.get("filter")).toEqual("");
+    expect(httpRequest.params.get("courseId")).toEqual("12");
 
-    expect(req.request.params.get("sortOrder")).toEqual("asc");
+    expect(httpRequest.params.get("filter")).toEqual("");
 
-    expect(req.request.params.get("pageNumber")).toEqual("0");
+    expect(httpRequest.params.get("sortOrder")).toEqual("asc");
 
-    expect(req.request.params.get("pageSize")).toEqual("3");
+    expect(httpRequest.params.get("pageNumber")).toEqual("0");
 
-    req.flush({
+    expect(httpRequest.params.get("pageSize")).toEqual("3");
+
+    testRequest.flush({
       payload: findLessonsForCourse(12).slice(0, 3),
     });
   });
