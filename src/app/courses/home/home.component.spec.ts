@@ -16,7 +16,6 @@ import {
 } from "@angular/common/http/testing";
 import { CoursesService } from "../services/courses.service";
 import { HttpClient } from "@angular/common/http";
-import { COURSES } from "../../../../server/db-data";
 import { setupCourses } from "../common/setup-test-data";
 import { By } from "@angular/platform-browser";
 import { of } from "rxjs";
@@ -37,12 +36,12 @@ describe("HomeComponent", () => {
     (course) => course.category == "ADVANCED"
   );
 
-  beforeEach(waitForAsync(async () => {
+  beforeEach(waitForAsync(() => {
     coursesServiceSpy = jasmine.createSpyObj<CoursesService>("CoursesService", [
       "findAllCourses",
     ]);
 
-    await TestBed.configureTestingModule({
+    TestBed.configureTestingModule({
       imports: [CoursesModule, NoopAnimationsModule],
       providers: [
         {
@@ -50,11 +49,13 @@ describe("HomeComponent", () => {
           useValue: coursesServiceSpy,
         },
       ],
-    }).compileComponents();
-
-    fixture = TestBed.createComponent(HomeComponent);
-    component = fixture.componentInstance;
-    el = fixture.debugElement;
+    })
+      .compileComponents()
+      .then(() => {
+        fixture = TestBed.createComponent(HomeComponent);
+        component = fixture.componentInstance;
+        el = fixture.debugElement;
+      });
   }));
 
   it("should create the component", () => {
@@ -91,7 +92,7 @@ describe("HomeComponent", () => {
     expect(tabs.length).toBe(2, "Unexpected number of tabs found");
   });
 
-  it("should display advanced courses when tab clicked", (done: DoneFn) => {
+  it("should display advanced courses when tab clicked - fakeAsync", fakeAsync(() => {
     coursesServiceSpy.findAllCourses.and.returnValue(of(setupCourses()));
 
     fixture.detectChanges();
@@ -102,7 +103,33 @@ describe("HomeComponent", () => {
 
     fixture.detectChanges();
 
-    setTimeout(() => {
+    flush();
+
+    const cardTitles = el.queryAll(
+      By.css(".mat-mdc-tab-body-active .mat-mdc-card-title")
+    );
+
+    expect(cardTitles.length).toBeGreaterThan(0, "Could not find card titles");
+
+    expect(cardTitles[0].nativeElement.textContent).toContain(
+      "Angular Security Course"
+    );
+  }));
+
+  it("should display advanced courses when tab clicked - waitForAsync", waitForAsync(() => {
+    coursesServiceSpy.findAllCourses.and.returnValue(of(setupCourses()));
+
+    fixture.detectChanges();
+
+    const tabs = el.queryAll(By.css(".mdc-tab"));
+
+    click(tabs[1]);
+
+    fixture.detectChanges();
+
+    fixture.whenStable().then(() => {
+      console.log("called whenStable()");
+
       const cardTitles = el.queryAll(
         By.css(".mat-mdc-tab-body-active .mat-mdc-card-title")
       );
@@ -115,8 +142,6 @@ describe("HomeComponent", () => {
       expect(cardTitles[0].nativeElement.textContent).toContain(
         "Angular Security Course"
       );
-
-      done();
-    }, 500);
-  });
+    });
+  }));
 });
